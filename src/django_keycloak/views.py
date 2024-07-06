@@ -102,6 +102,13 @@ class Logout(RedirectView):
 
         return reverse("keycloak_login")
 
+class Register(Login):
+
+    def get_redirect_url(self, *args, **kwargs):
+
+        authorization_url = super().get_redirect_url(*args, **kwargs)
+
+        return authorization_url.replace("/auth?", "/registrations?")
 
 login_view = Login.as_view()
 login_complete_view = LoginComplete.as_view()

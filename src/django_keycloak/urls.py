@@ -22,5 +22,6 @@ from . import views
 urlpatterns = [
     path('login/', views.login_view, name='keycloak_login'),
     path('login-complete/', views.login_complete_view, name='keycloak_login_complete'),
-    path('logout/', views.logout_view, name='keycloak_logout')
+    path('logout/', views.logout_view, name='keycloak_logout'),
+    path('register/', views.Register.as_view(), name='keycloak_register'),
 ]
