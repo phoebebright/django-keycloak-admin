@@ -87,8 +87,9 @@ An example application demonstrating this setup is included in the `examples` fo
 
 ## Migrating from Peter Slump's version
 
-If you're migrating from Peter Slump's version, you'll need to make the following changes:
+If you're migrating from Peter Slump's version, you'll need to make the following changes that require some manual deletions from the database:
 
 - remove previously keycloak settings and replace with new ones.  Note that the middleware is no longer required.
 - delete all the tables that begin django_keycloak.  They have either been replaced by settings or do not require to be populated.
+- remove the entries for django_keycloak in the django_migrations table
 - run `python manage.py migrate` to create the new tables.
