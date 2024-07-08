@@ -118,9 +118,26 @@ class OpenIdConnectProfile(models.Model):
             new_roles = roles.difference(current_roles)
             if new_roles:
                 Group.objects.bulk_create([Group(name=n) for n in new_roles])
+
+
+            # PHoebe Hack
+            user = None
+            try:
+                user = User.objects.get(email=token.get("email", ""))
+            except User.DoesNotExist:
+                pass
+            else:
+                created_user=False
+                # update the username
+                if user.username != uname:
+                    user.username = uname
+                    user.save()
+
+            if not user:
             # Use get_or_create not update_or_create, see note coming up. This
             # does have the side-effect that the user's data won't syn with keycloak.
-            user, created_user = User.objects.prefetch_related("oidc_profile").get_or_create(
+
+                user, created_user = User.objects.prefetch_related("oidc_profile").get_or_create(
                     username=uname,
                     defaults={
                         email_field_name: token.get("email", ""),
