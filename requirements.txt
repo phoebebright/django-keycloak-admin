@@ -16,7 +16,7 @@ cryptography==42.0.7
     # via jwcrypto
 deprecation==2.1.0
     # via python-keycloak
-django==5.0.6
+django>=4.2
     # via
     #   django-keycloak (pyproject.toml)
     #   djangorestframework
