@@ -1,3 +1,13 @@
+# Django Keycloak Admin
+
+This is a fork of migueldb https://github.com/migelbd/django-admin-keycloak which is designed to replace the now unmaintained Peter Slump's version of django-keycloak.
+
+While I understand the disire to keep things simple by maintaining the name django_keycloak in the app, it has caused me endless problems as I migrate my various applications - all self inflicted - like having the original library installed in one virtualenv and the new one in another and running conflicting migrations.
+
+So I am renaming this fork django_keycloak_admin as I feel it is different enough that the small extra amount of work in renaming will make the migrations that many people are likely to do easier.
+
+
+
 # Django Keycloak
 
 A simple remote authentication module for use with Django and a Keycloak auth server.
@@ -25,14 +35,14 @@ In your application's settings, add the following lines:
 # your-project/settings.py
 INSTALLED_APPS = [
     ...
-    'django_keycloak'
+    'django_keycloak_admin'
 ]
 # For admin site authentication
 AUTHENTICATION_BACKENDS = [
     ...
-    'django_keycloak.backends.KeycloakAuthorizationCodeBackend',
+    'django_keycloak_admin.backends.KeycloakAuthorizationCodeBackend',
 ]
-AUTH_USER_MODEL = "django_keycloak.KeycloakUser"  # Optional
+AUTH_USER_MODEL = "django_keycloak_admin.KeycloakUser"  # Optional
 KEYCLOAK_CLIENTS = {
     "DEFAULT": {
         "URL": ...,
@@ -51,7 +61,7 @@ KEYCLOAK_CLIENTS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'django_keycloak.authentication.KeycloakDRFAuthentication',
+        'django_keycloak_admin.authentication.KeycloakDRFAuthentication',
     ]
 }
 ```
@@ -60,11 +70,11 @@ Open your app's `urls.py` file, ad add the following:
 ```python
 from django.contrib import admin
 from django.urls import path, include
-from django_keycloak.views import admin_login
+from django_keycloak_admin.views import admin_login
 
 urlpatterns = [
     # This will override the default django login page
-    path("admin/", include("django_keycloak.urls")),
+    path("admin/", include("django_keycloak_admin.urls")),
     path("admin/", admin.site.urls),
     ...
 ]

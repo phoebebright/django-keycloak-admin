@@ -21,7 +21,7 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path("admin/", include("django_keycloak.urls")),
+    path("admin/", include("django_keycloak_admin.urls")),
     path("admin/", admin.site.urls),
     path("api/end-point/", views.api_end_point),
     path("api/authenticated-end-point/", views.authenticated_end_point),

@@ -60,7 +60,7 @@ class OpenIdConnectProfile(models.Model):
         :param realm: Keycloak realm object.
         :param code: Authentication code
         :param redirect_uri
-        :rtype: django_keycloak.models.OpenIdConnectProfile
+        :rtype: django_keycloak_admin.models.OpenIdConnectProfile
         """
         token_response = client.token(
             code=code, redirect_uri=redirect_uri, grant_type="authorization_code"
@@ -80,7 +80,7 @@ class OpenIdConnectProfile(models.Model):
         :param username: Keycloak username
         :param password: Keycloak password
         :param redirect_uri
-        :rtype: django_keycloak.models.OpenIdConnectProfile
+        :rtype: django_keycloak_admin.models.OpenIdConnectProfile
         """
         token_response = client.token(
             username=username,

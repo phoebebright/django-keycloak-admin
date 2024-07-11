@@ -18,7 +18,7 @@ classifiers = [
 ]
 dependencies = [
     'python-keycloak>=4.0.0',
-    'Django>=5.0.0',
+    'Django>=4.2',
     'djangorestframework>=3.0.0',
 ]
 

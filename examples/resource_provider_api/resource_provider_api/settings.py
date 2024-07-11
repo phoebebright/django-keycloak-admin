@@ -28,8 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Keycloak config
-AUTHENTICATION_BACKENDS = ["django_keycloak.backends.KeycloakAuthorizationCodeBackend"]
-AUTH_USER_MODEL = "django_keycloak.KeycloakUser"
+AUTHENTICATION_BACKENDS = ["django_keycloak_admin.backends.KeycloakAuthorizationCodeBackend"]
+AUTH_USER_MODEL = "django_keycloak_admin.KeycloakUser"
 KEYCLOAK_CLIENTS = {
     "DEFAULT": {
         "URL": "http://localhost:8001",
@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_keycloak",  # <- ADD THIS
+    "django_keycloak_admin",  # <- ADD THIS
 ]
 
 MIDDLEWARE = [
