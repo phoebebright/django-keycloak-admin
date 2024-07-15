@@ -31,6 +31,9 @@ class KeycloakAuthorizationBase:
                 return None
         except OpenIdConnectProfile.DoesNotExist:
             return None
+        except Exception as e:
+            logger.warning(f"Unexpected exception while refreshing profile for user {user}: {e} ")
+            return None
         return user
 
 

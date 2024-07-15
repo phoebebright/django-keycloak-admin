@@ -181,7 +181,15 @@ class OpenIdConnectProfile(models.Model):
     @property
     def client(self) -> KeycloakOpenID:
         """Get the OpenID client for this profile."""
-        return find_client(self.client_id)
+        '''if logged in to app with one client and then go to development (that has a different client) user 
+        still gets logged in while the token is valid but when it expires keycloak_admin crashes.  
+        Instead use the default client to try and re-authenticate.
+        This will likely fail unless there is another token for the current client, 
+        but we will catch it in refresh_token and get the user to re-authenticate.'''
+        try:
+            return find_client(self.client_id)
+        except ValueError:
+            return DEFAULT_CLIENT
 
     @property
     def can_refresh(self) -> bool:
