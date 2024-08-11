@@ -34,7 +34,8 @@ def find_client(client_id: str) -> KeycloakOpenID:
                 client_data["CLIENT_ID"],
                 client_data["CLIENT_SECRET"],
             )
-    raise ValueError(f"No client registered with ID '{client_id}'")
+    else:
+        raise ValueError(f"No client registered with ID '{client_id}'")
 
 
 class OpenIdConnectProfile(models.Model):
@@ -187,9 +188,11 @@ class OpenIdConnectProfile(models.Model):
         This will likely fail unless there is another token for the current client, 
         but we will catch it in refresh_token and get the user to re-authenticate.'''
         try:
-            return find_client(self.client_id)
+            client = find_client(self.client_id)
         except ValueError:
-            return DEFAULT_CLIENT
+            client = DEFAULT_CLIENT
+
+        return client
 
     @property
     def can_refresh(self) -> bool:
