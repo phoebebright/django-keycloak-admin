@@ -186,7 +186,30 @@ class OpenIdConnectProfile(models.Model):
         still gets logged in while the token is valid but when it expires keycloak_admin crashes.  
         Instead use the default client to try and re-authenticate.
         This will likely fail unless there is another token for the current client, 
-        but we will catch it in refresh_token and get the user to re-authenticate.'''
+        but we will catch it in refresh_token and get the user to re-authenticate.
+        
+        But this approach just leads to:
+        ERROR 2024-08-11 13:57:24,532 log  Internal Server Error: /keycloak/logout/
+Traceback (most recent call last):
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django/views/generic/base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django/views/generic/base.py", line 257, in get
+    url = self.get_redirect_url(*args, **kwargs)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/django_keycloak_admin/views.py", line 101, in get_redirect_url
+    profile.client.logout(profile.refresh_token)
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/keycloak/keycloak_openid.py", line 457, in logout
+    return raise_error_from_response(data_raw, KeycloakPostError, expected_codes=[204])
+  File "/home/django/virtualenvs/skorie3.10/lib/python3.10/site-packages/keycloak/exceptions.py", line 192, in raise_error_from_response
+    raise error(
+keycloak.exceptions.KeycloakPostError: 400: b'{"error":"invalid_grant","error_description":"Invalid refresh token. Token client and authorized client don\'t match"}'
+        
+        '''
         try:
             client = find_client(self.client_id)
         except ValueError:
