@@ -96,17 +96,36 @@ class Logout(RedirectView):
     """Logout View."""
 
     def get_redirect_url(self, *args, **kwargs):
-        profile = getattr(self.request.user, "oidc_profile", None)
-        if profile:
-            profile.client.logout(profile.refresh_token)
-            profile.delete()
+            '''replacing with Peter Stump version as getting stuck logging out in production when I had been logged in as a different user in development '''
 
-        logout(self.request)
+            if hasattr(self.request.user, 'oidc_profile'):
+                # NOTE: getting error invalid refresh token
+                try:
+                    self.request.realm.client.openid_api_client.logout(
+                        self.request.user.oidc_profile.refresh_token
+                    )
+                except Exception as e:
+                    logger.error(f"Error logging out user and getting refresh token: {e}")
 
-        if settings.LOGOUT_REDIRECT_URL:
-            return resolve_url(settings.LOGOUT_REDIRECT_URL)
+                self.request.user.oidc_profile.access_token = None
+                self.request.user.oidc_profile.expires_before = None
+                self.request.user.oidc_profile.refresh_token = None
+                self.request.user.oidc_profile.refresh_expires_before = None
+                self.request.user.oidc_profile.save(update_fields=[
+                    'access_token',
+                    'expires_before',
+                    'refresh_token',
+                    'refresh_expires_before'
+                ])
 
-        return reverse("keycloak_login")
+                logout(self.request)
+
+                if settings.LOGOUT_REDIRECT_URL:
+                    return resolve_url(settings.LOGOUT_REDIRECT_URL)
+
+                return reverse('keycloak_login')
+
+
 
 class Register(Login):
 
