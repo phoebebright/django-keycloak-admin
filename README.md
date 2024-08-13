@@ -1,5 +1,8 @@
 # Django Keycloak Admin
 
+This version "hacked" by Phoebe Bright when using it to replace the original django-keycloak in a number of applications.  In particular the app has been renamed django_keycloak_admin to avoid conflicts with the original Peter Slump library.  
+
+
 This is a fork of migueldb https://github.com/migelbd/django-admin-keycloak which is designed to replace the now unmaintained Peter Slump's version of django-keycloak.
 
 While I understand the disire to keep things simple by maintaining the name django_keycloak in the app, it has caused me endless problems as I migrate my various applications - all self inflicted - like having the original library installed in one virtualenv and the new one in another and running conflicting migrations.
