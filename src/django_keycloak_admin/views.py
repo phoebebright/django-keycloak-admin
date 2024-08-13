@@ -110,10 +110,10 @@ class Logout(RedirectView):
                 self.request.user.oidc_profile.access_token = None
                 self.request.user.oidc_profile.expires_before = None
                 self.request.user.oidc_profile.refresh_token = None
-                #self.request.user.oidc_profile.refresh_expires_before = None
+
                 self.request.user.oidc_profile.save(update_fields=[
                     'access_token',
-                    'expires_before',
+
                     'refresh_token',
                     'refresh_expires_before'
                 ])
