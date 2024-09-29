@@ -135,18 +135,28 @@ class OpenIdConnectProfile(models.Model):
                     user.save()
 
             if not user:
-            # Use get_or_create not update_or_create, see note coming up. This
-            # does have the side-effect that the user's data won't syn with keycloak.
+                # Use get_or_create not update_or_create, see note coming up. This
+                # does have the side-effect that the user's data won't syn with keycloak.
+
+                defaults = {
+                    email_field_name: token.get("email", ""),
+                    "first_name": token.get("given_name", ""),
+                    "last_name": token.get("family_name", ""),
+                    "is_superuser": admin_role in roles,
+                    "is_staff": admin_role in roles,
+
+                }
+
+                # these are optional attributes of user - keycloak_id is the alphanumeric id of the user in keycloak
+                if hasattr(User, 'keycloak_id'):
+                    defaults['keycloak_id'] = token.get("sub")
+                # if you want to provide alternative options for verifiying the account, you can have a valid user without a verified email
+                if hasattr(User, 'email_verified'):
+                    defaults['email_verified'] = token.get("email_verified", True),
 
                 user, created_user = User.objects.prefetch_related("oidc_profile").get_or_create(
                     username=uname,
-                    defaults={
-                        email_field_name: token.get("email", ""),
-                        "first_name": token.get("given_name", ""),
-                        "last_name": token.get("family_name", ""),
-                        "is_superuser": admin_role in roles,
-                        "is_staff": admin_role in roles,
-                    },
+                    defaults=defaults,
                 )
             user.groups.set(Group.objects.filter(name__in=roles))
             if created_user:

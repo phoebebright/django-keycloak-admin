@@ -106,3 +106,11 @@ If you're migrating from Peter Slump's version, you'll need to make the followin
 - delete all the tables that begin django_keycloak.  They have either been replaced by settings or do not require to be populated.
 - remove the entries for django_keycloak in the django_migrations table
 - run `python manage.py migrate` to create the new tables.
+
+
+## Additional User fields
+
+If the fields keycloak_id and email_verified are added to the User model, they will be updated from keycloak when the user is created.
+
+    keycloak_id = models.UUIDField(editable=False, unique=True, null=True, blank=True). # can be non-optional on new system
+    email_verified = models.BooleanField(default=True)    # prefer default=False on new system

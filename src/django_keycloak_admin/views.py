@@ -11,11 +11,22 @@ from django.http.response import (
 from django.urls.base import reverse
 from keycloak.exceptions import KeycloakConnectionError
 from django.views.generic.base import RedirectView
-
+from keycloak import KeycloakOpenID
 from .models import Nonce, DEFAULT_CLIENT
 
+logger = logging.getLogger(__file__)
 
-logger = logging.getLogger(__name__)
+
+# if "API" in settings.KEYCLOAK_CLIENTS:
+#     API_CLIENT = KeycloakOpenID(
+#         settings.KEYCLOAK_CLIENTS["API"]["URL"],
+#         settings.KEYCLOAK_CLIENTS["API"]["REALM"],
+#         settings.KEYCLOAK_CLIENTS["API"]["CLIENT_ID"],
+#         settings.KEYCLOAK_CLIENTS["API"]["CLIENT_SECRET"],
+#     )
+# else:
+#     API_CLIENT = None
+
 
 
 class Login(RedirectView):
@@ -96,35 +107,37 @@ class Logout(RedirectView):
     """Logout View."""
 
     def get_redirect_url(self, *args, **kwargs):
-            '''replacing with Peter Stump version as getting stuck logging out in production when I had been logged in as a different user in development '''
+        '''replacing with Peter Stump version as getting stuck logging out in production when I had been logged in as a different user in development '''
 
-            if hasattr(self.request.user, 'oidc_profile'):
-                # NOTE: getting error invalid refresh token
-                try:
-                    self.request.realm.client.openid_api_client.logout(
-                        self.request.user.oidc_profile.refresh_token
-                    )
-                except Exception as e:
-                    logger.error(f"Error logging out user and getting refresh token: {e}")
+        if hasattr(self.request.user, 'oidc_profile'):
+            # NOTE: getting error invalid refresh token
+            profile = getattr(self.request.user, "oidc_profile", None)
+            if profile:
+                profile.client.logout(profile.refresh_token)
 
-                self.request.user.oidc_profile.access_token = None
-                #self.request.user.oidc_profile.expires_before = None
-                self.request.user.oidc_profile.refresh_token = None
-                self.request.user.oidc_profile.refresh_expires_before = None
-                self.request.user.oidc_profile.save(update_fields=[
+                profile.access_token = None
+                _profile.expires_before = None
+                profile.refresh_token = None
+                profile.refresh_expires_before = None
+                profile.save(update_fields=[
                     'access_token',
 
                     'refresh_token',
                     'refresh_expires_before'
                 ])
 
-                logout(self.request)
+                try:
+                    profile.delete()
+                except Exception as e:
+                    logger.error(f"Error deleting profile: {e}")
 
-                if settings.LOGOUT_REDIRECT_URL:
-                    return resolve_url(settings.LOGOUT_REDIRECT_URL)
+            # django logout
+            logout(self.request)
 
-                return reverse('keycloak_login')
+            if settings.LOGOUT_REDIRECT_URL:
+                return resolve_url(settings.LOGOUT_REDIRECT_URL)
 
+            return reverse('keycloak_login')
 
 
 class Register(Login):
