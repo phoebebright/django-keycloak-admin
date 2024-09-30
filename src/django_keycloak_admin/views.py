@@ -116,7 +116,7 @@ class Logout(RedirectView):
                 profile.client.logout(profile.refresh_token)
 
                 profile.access_token = None
-                _profile.expires_before = None
+                profile.expires_before = None
                 profile.refresh_token = None
                 profile.refresh_expires_before = None
                 profile.save(update_fields=[
