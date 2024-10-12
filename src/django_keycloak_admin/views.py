@@ -113,7 +113,10 @@ class Logout(RedirectView):
             # NOTE: getting error invalid refresh token
             profile = getattr(self.request.user, "oidc_profile", None)
             if profile:
-                profile.client.logout(profile.refresh_token)
+                try:
+                    profile.client.logout(profile.refresh_token)
+                except Exception as e:
+                    logger.warning(f"Error logging out: {e}")
 
                 profile.access_token = None
                 profile.expires_before = None
