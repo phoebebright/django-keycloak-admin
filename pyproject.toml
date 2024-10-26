@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-keycloak-admin"
-version = "0.0.2d"
+version = "0.0.4"
 authors = [
   { name="Erik Polzin", email="eriktpol@gmail.com" },
 ]
@@ -18,7 +18,7 @@ classifiers = [
 ]
 dependencies = [
     'python-keycloak>=4.0.0',
-    'Django>=4.2',
+    'Django>=5.0.0',
     'djangorestframework>=3.0.0',
 ]
 

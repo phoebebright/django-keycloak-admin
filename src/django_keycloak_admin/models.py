@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
+import time
 import logging
 import uuid
 
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from django.db import models, transaction
+from django.db import models, transaction, connection
 from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import make_aware
@@ -36,6 +37,35 @@ def find_client(client_id: str) -> KeycloakOpenID:
             )
     else:
         raise ValueError(f"No client registered with ID '{client_id}'")
+
+
+def try_while_locked(n, retry_wait=1):
+    """Retry a function n times if it throws an operational error.
+
+    In particular, update_or_create seems to lock the table for writes,
+    so if two requests come in one after the other with the default sqlite
+    database, django throws a 'database is locked' exception.
+    """
+
+    def outer(f):
+        """Function wrapper."""
+
+        # This only seems to be an issue with sqlite
+        if connection.vendor != "sqlite":
+            return f
+
+        def inner(*args, **kwargs):
+            for i in range(n):
+                try:
+                    return f(*args, **kwargs)
+                except OperationalError as oe:
+                    logger.warning("(%s) Encountered an operational error: %s, retrying", i, oe)
+                    time.sleep(retry_wait)
+            raise OperationalError("Encountered too many operational errors!")
+
+        return inner
+
+    return outer
 
 
 class OpenIdConnectProfile(models.Model):
@@ -95,6 +125,7 @@ class OpenIdConnectProfile(models.Model):
         return profile
 
     @classmethod
+    @try_while_locked(3)
     def from_token(
         cls, encoded_token: str, client=DEFAULT_CLIENT
     ) -> "OpenIdConnectProfile | None":
