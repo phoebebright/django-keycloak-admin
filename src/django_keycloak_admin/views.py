@@ -146,7 +146,7 @@ class Logout(RedirectView):
 class Register(Login):
 
     def get_redirect_url(self, *args, **kwargs):
-
+        print(f"Registering user with keycloak")
         try:
             authorization_url = super().get_redirect_url(*args, **kwargs).replace("/auth?", "/registrations?")
         except Exception as e:
