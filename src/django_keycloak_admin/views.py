@@ -153,7 +153,7 @@ class Register(Login):
             logger.error(f"Error with getting authorization url for keycloak registration: {e}")
             raise
         else:
-            logger.info(f"Redirecting to {authorization_url} for registration")
+            print(f"Redirecting to {authorization_url} for registration")
 
         return authorization_url
 
