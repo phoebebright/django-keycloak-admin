@@ -147,9 +147,15 @@ class Register(Login):
 
     def get_redirect_url(self, *args, **kwargs):
 
-        authorization_url = super().get_redirect_url(*args, **kwargs)
+        try:
+            authorization_url = super().get_redirect_url(*args, **kwargs).replace("/auth?", "/registrations?")
+        except Exception as e:
+            logger.error(f"Error with getting authorization url for keycloak registration: {e}")
+            raise
+        else:
+            logger.info(f"Redirecting to {authorization_url} for registration")
 
-        return authorization_url.replace("/auth?", "/registrations?")
+        return authorization_url
 
 login_view = Login.as_view()
 login_complete_view = LoginComplete.as_view()
