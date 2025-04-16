@@ -66,5 +66,5 @@ class KeycloakPasswordCredentialsBackend(KeycloakAuthorizationBase):
             profile = OpenIdConnectProfile.from_credentials(username, password, redirect_uri)
         except KeycloakError as e:
             logger.error("Error with sign-in: %s", e)
-            raise
+            return None
         return profile.user if profile else None
