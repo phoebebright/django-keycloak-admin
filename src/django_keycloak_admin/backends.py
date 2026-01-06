@@ -40,12 +40,13 @@ class KeycloakAuthorizationBase:
 class KeycloakAuthorizationCodeBackend(KeycloakAuthorizationBase):
     """Authenticates users with an access token."""
 
-    def authenticate(self,
-                     request: HttpRequest,
-                     code: str = None,
-                     redirect_uri: str = "") -> User | None:
+    def authenticate(self, request, **kwargs):
+        if request is None:
+            return None
 
-        # can end up calling this from drf without a code
+        code = kwargs.get("code")
+        redirect_uri = kwargs.get("redirect_uri", "")
+
         if not code:
             return None
 
