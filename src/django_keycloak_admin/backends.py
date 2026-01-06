@@ -42,8 +42,13 @@ class KeycloakAuthorizationCodeBackend(KeycloakAuthorizationBase):
 
     def authenticate(self,
                      request: HttpRequest,
-                     code: str,
+                     code: str = None,
                      redirect_uri: str = "") -> User | None:
+
+        # can end up calling this from drf without a code
+        if not code:
+            return None
+
         """Authenticate a user from an access code."""
         try:
             profile = OpenIdConnectProfile.from_code(code, redirect_uri)
