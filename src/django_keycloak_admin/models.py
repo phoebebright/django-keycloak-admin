@@ -17,26 +17,57 @@ from keycloak import KeycloakOpenID
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_CLIENT = KeycloakOpenID(
-    settings.KEYCLOAK_CLIENTS["DEFAULT"]["URL"],
-    settings.KEYCLOAK_CLIENTS["DEFAULT"]["REALM"],
-    settings.KEYCLOAK_CLIENTS["DEFAULT"]["CLIENT_ID"],
-    settings.KEYCLOAK_CLIENTS["DEFAULT"]["CLIENT_SECRET"],
-)
+_cached_clients = {}
+
+
+def _get_keycloak_config(client_id="DEFAULT"):
+    """Fetch Keycloak configuration for a given client ID."""
+    try:
+        config = settings.KEYCLOAK_CLIENTS[client_id]
+    except (AttributeError, KeyError):
+        raise ValueError(f"Keycloak client '{client_id}' not configured in settings.KEYCLOAK_CLIENTS")
+    return config
+
+
+def get_keycloak_openid(client_id="DEFAULT"):
+    """Get or create a KeycloakOpenID client instance."""
+    if client_id not in _cached_clients:
+        config = _get_keycloak_config(client_id)
+        _cached_clients[client_id] = KeycloakOpenID(
+            config["URL"],
+            config["REALM"],
+            config["CLIENT_ID"],
+            config["CLIENT_SECRET"],
+        )
+    return _cached_clients[client_id]
+
+
+class _KeycloakOpenIDProxy:
+    """Proxy for KeycloakOpenID to allow lazy initialization of DEFAULT_CLIENT."""
+
+    def __getattr__(self, name):
+        return getattr(get_keycloak_openid("DEFAULT"), name)
+
+
+DEFAULT_CLIENT = _KeycloakOpenIDProxy()
 
 
 def find_client(client_id: str) -> KeycloakOpenID:
     """Find a client in settings with this client ID, or default."""
-    for client_data in settings.KEYCLOAK_CLIENTS.values():
-        if client_data["CLIENT_ID"] == client_id:
-            return KeycloakOpenID(
-                client_data["URL"],
-                client_data["REALM"],
-                client_data["CLIENT_ID"],
-                client_data["CLIENT_SECRET"],
-            )
-    else:
-        raise ValueError(f"No client registered with ID '{client_id}'")
+    try:
+        return get_keycloak_openid(client_id)
+    except ValueError:
+        # Fallback to searching by CLIENT_ID if client_id is not the key in KEYCLOAK_CLIENTS
+        try:
+            clients_config = getattr(settings, "KEYCLOAK_CLIENTS", {})
+        except AttributeError:
+            raise ValueError(f"No client registered with ID '{client_id}'")
+
+        for key, client_data in clients_config.items():
+            if client_data.get("CLIENT_ID") == client_id:
+                return get_keycloak_openid(key)
+        else:
+            raise ValueError(f"No client registered with ID '{client_id}'")
 
 
 def try_while_locked(n, retry_wait=1):
@@ -84,7 +115,7 @@ class OpenIdConnectProfile(models.Model):
 
     @classmethod
     def from_code(
-        cls, code: str, redirect_uri: str = "", client=DEFAULT_CLIENT
+        cls, code: str, redirect_uri: str = "", client=None
     ) -> "OpenIdConnectProfile | None":
         """Generate or update a OID profile from an authentication code.
 
@@ -93,6 +124,8 @@ class OpenIdConnectProfile(models.Model):
         :param redirect_uri
         :rtype: django_keycloak_admin.models.OpenIdConnectProfile
         """
+        if client is None:
+            client = DEFAULT_CLIENT
         token_response = client.token(
             code=code, redirect_uri=redirect_uri, grant_type="authorization_code"
         )
@@ -103,7 +136,7 @@ class OpenIdConnectProfile(models.Model):
 
     @classmethod
     def from_credentials(
-        cls, username: str, password: str, redirect_uri: str = "", client=DEFAULT_CLIENT
+        cls, username: str, password: str, redirect_uri: str = "", client=None
     ) -> "OpenIdConnectProfile | None":
         """Generate or update a OID profile from user credentials.
 
@@ -113,6 +146,8 @@ class OpenIdConnectProfile(models.Model):
         :param redirect_uri
         :rtype: django_keycloak_admin.models.OpenIdConnectProfile
         """
+        if client is None:
+            client = DEFAULT_CLIENT
         token_response = client.token(
             username=username,
             password=password,
@@ -127,9 +162,11 @@ class OpenIdConnectProfile(models.Model):
     @classmethod
     @try_while_locked(3)
     def from_token(
-        cls, encoded_token: str, client=DEFAULT_CLIENT
+        cls, encoded_token: str, client=None
     ) -> "OpenIdConnectProfile | None":
         """Generate an OIDC profile from an auth server response."""
+        if client is None:
+            client = DEFAULT_CLIENT
         try:
             token = client.decode_token(encoded_token)
         except KeycloakError as e:
